@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXUS // ARSENAL</title>
+    <style>
+        /* --- RESET & BASE --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Consolas', 'Courier New', monospace; }
+        body { 
+            background-color: #050505; 
+            color: #e0e0e0; 
+            overflow-x: hidden; 
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* --- VARIABLES (Injected by JS) --- */
+        :root {
+            --accent: #00ffcc;       /* Cyan */
+            --secondary: #ff0055;    /* Red/Pink for alerts */
+            --bg-panel: rgba(15, 20, 25, 0.9);
+            --border: 1px solid rgba(0, 255, 204, 0.3);
+            --blur: blur(5px);
+        }
+
+        /* --- LAYOUT UTILS --- */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .flex { display: flex; align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .gap-10 { gap: 10px; } .gap-20 { gap: 20px; }
+        .text-center { text-align: center; }
+        .mt-20 { margin-top: 20px; }
+
+        /* --- HEADER --- */
+        header {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            background: rgba(5, 5, 5, 0.9);
+            border-bottom: 1px solid var(--accent);
+            padding: 15px 0;
+            backdrop-filter: blur(10px);
+        }
+        .brand { font-size: 1.5rem; font-weight: bold; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; }
+        .brand span { color: #fff; }
+        
+        .nav-link {
+            background: transparent; border: none; color: #888; 
+            font-size: 0.9rem; cursor: pointer; text-transform: uppercase; 
+            margin-left: 20px; transition: 0.2s;
+        }
+        .nav-link:hover, .nav-link.active { color: var(--accent); text-shadow: 0 0 8px var(--accent); }
+
+        /* --- HERO --- */
+        .hero { margin-top: 100px; padding: 60px 20px; position: relative; }
+        .hero h1 { font-size: 3rem; color: #fff; margin-bottom: 10px; }
+        .hero .subtitle { color: var(--accent); font-size: 1.1rem; margin-bottom: 30px; }
+        
+        /* --- FILTERS --- */
+        .filters { margin-bottom: 40px; }
+        .filter-btn {
+            background: rgba(0, 255, 204, 0.05);
+            border: var(--border);
+            color: var(--accent);
+            padding: 8px 16px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            transition: 0.2s;
+        }
+        .filter-btn:hover, .filter-btn.active { background: var(--accent); color: #000; }
+        
+        .search-wrap { position: relative; margin-left: auto; }
+        .search-input {
+            background: rgba(0,0,0,0.5); border: var(--border); color: #fff;
+            padding: 8px 15px; width: 250px; outline: none;
+        }
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(0,255,204,0.2); }
+
+        /* --- GRID --- */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; padding-bottom: 50px; }
+
+        /* --- CARDS --- */
+        .card {
+            background: var(--bg-panel);
+            border: var(--border);
+            padding: 2px; /* For double border effect inside */
+            position: relative;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card-inner { background: #111; padding: 20px; height: 100%; display: flex; flex-direction: column; }
+        
+        .card:hover { transform: translateY(-5px); box-shadow: 0 0 20px rgba(0, 255, 204, 0.15); border-color: var(--accent); }
+
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 0.75rem; color: #666; text-transform: uppercase; }
+        .status-dot { width: 8px; height: 8px; background: #333; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .status-dot.online { background: #0f0; box-shadow: 0 0 5px #0f0; }
+
+        .preview-box {
+            height: 120px; background: #0a0a0a; border: 1px dashed #333;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 15px; color: #444; font-size: 0.8rem;
+        }
+        
+        .card h2 { color: #fff; font-size: 1.4rem; margin-bottom: 5px; letter-spacing: 1px; }
+        .card p { color: #999; font-size: 0.85rem; line-height: 1.5; margin-bottom: 20px; flex-grow: 1; }
+
+        .card-footer { border-top: 1px solid #222; padding-top: 15px; display: flex; align-items: center; justify-content: space-between; }
+        .price { font-size: 1.2rem; font-weight: bold; color: var(--accent); }
+        
+        .btn-buy {
+            background: var(--accent); color: #000; border: none;
+            padding: 8px 20px; font-weight: bold; cursor: pointer;
+            text-transform: uppercase; font-size: 0.85rem;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            transition: 0.2s; text-decoration: none; display: inline-block;
+        }
+        .btn-buy:hover { background: #fff; }
+
+        .btn-details {
+            background: transparent; color: #aaa; border: none; 
+            cursor: pointer; text-decoration: underline; font-size: 0.8rem;
+        }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 999;
+            display: none; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        .modal {
+            background: #111; border: 1px solid var(--accent);
+            width: 600px; max-width: 95%; max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 0 50px rgba(0, 255, 204, 0.1);
+            position: relative;
+        }
+        .modal-header {
+            background: rgba(0, 255, 204, 0.1); padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #333;
+        }
+        .modal-header h3 { color: var(--accent); margin: 0; }
+        .close-icon { color: #fff; cursor: pointer; font-size: 1.5rem; line-height: 1; }
+        
+        .modal-body { padding: 30px; }
+        .spec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; border: 1px solid #222; padding: 15px; }
+        .spec-item { font-size: 0.9rem; }
+        .spec-label { color: #666; display: block; font-size: 0.75rem; }
+        .spec-val { color: #fff; }
+
+    </style>
+</head>
+<body>
+
+    <!-- NAV -->
+    <header>
+        <div class="container flex justify-between">
+            <div class="brand" id="nav-brand">NEXUS</div>
+            <nav>
+                <button class="nav-link active" onclick="app.setFilter('all')">Index</button>
+                <button class="nav-link" onclick="app.openModal('about')">Manifesto</button>
+                <button class="nav-link" onclick="app.openModal('contact')">Comm Link</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        
+        <!-- HERO -->
+        <div class="hero text-center">
+            <h1 id="hero-head">SYSTEM ARSENAL</h1>
+            <div class="subtitle" id="hero-sub">elite_software_distribution_system_v4.0</div>
+            
+            <div class="filters flex justify-center gap-10">
+                <button class="filter-btn active" onclick="app.setFilter('all')">ALL MODULES</button>
+                <button class="filter-btn" onclick="app.setFilter('rat')">RAT</button>
+                <button class="filter-btn" onclick="app.setFilter('exploit')">EXPLOITS</button>
+                <button class="filter-btn" onclick="app.setFilter('free')">FREEWARE</button>
+                
+                <div class="search-wrap">
+                    <input type="text" class="search-input" placeholder="> SEARCH_DATABASE..." onkeyup="app.search(this.value)">
+                </div>
+            </div>
+        </div>
+
+        <!-- PRODUCT GRID -->
+        <div class="grid" id="product-grid">
+            <!-- JS INJECTS CARDS HERE -->
+        </div>
+
+    </div>
+
+    <!-- MODAL CONTAINER -->
+    <div id="modal-overlay" class="modal-overlay" onclick="if(event.target === this) app.closeModal()">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="m-title">TITLE</h3>
+                <span class="close-icon" onclick="app.closeModal()">×</span>
+            </div>
+            <div class="modal-body" id="m-body">
+                <!-- CONTENT -->
+            </div>
+        </div>
+    </div>
+
+     <script>
+        /**********************************************************
+         *  THE CONFIGURATION MATRIX
+         *  Edit everything here. No HTML knowledge required.
+         **********************************************************/
+        const CONFIG = {
+            branding: {
+                name: "Hell Bound Group",
+                accentColor: "#00ffcc",  // Cyan Neon
+                heroTitle: "HELL BOUND",
+                heroSubtitle: "UNDETECTABLE TOOLS // ELITE ACCESS"
+            },
+
+            // CONTENT FOR 'ABOUT' MODAL
+            aboutHtml: `
+                <p style="color:#fff; margin-bottom:15px;">Hell Bound Team, Uploading Free,Paid Tools Thats Powerfull and Strong Thanks For Support Enjoy Ur Free/Paid Tools!</p>
+                <br>
+                <ul style="list-style:none; color:#888; line-height:1.8;">
+                    <li>> Zero-Day Acquisition</li>
+                    <li>> Kernel-Level Persistence</li>
+                    <li>> Polyglot Payload Generation</li>
+                </ul>
+            `,
+
+                      // CONTENT FOR 'CONTACT' MODAL
+            contactHtml: `
+                <div style="text-align:center;">
+                    <p style="color:#00ffcc; font-size:1.2rem; margin-bottom:20px;">Our Discord</p>
+                    
+                    <!-- THE HREF ATTRIBUTE IS WHERE THE LINK GOES -->
+                    <a href="https://discord.gg/9SsVTGkY7V" target="_blank" class="btn-buy" style="margin:5px;">JOIN SERVER</a>
+                    
+                    <br><br>
+                    <p style="font-size:0.8rem; color:#666;">Support Response Time: < 2 Hours</p>
+                    <p style="font-size:0.8rem; color:#666; margin-top:5px;">Made By Lucifer, Arise.exe</p>
+                </div>
+            `,
+
+            // THE PRODUCTS
+            products: [
+                {
+                    id: "p1",
+                    category: "free",
+                    name: "Xworm 5.6",
+                    shortDesc: "Multi-threaded remote administration tool with HVNC support.",
+                    fullDesc: "Xworm represents the apex of persistence. Features include Hidden VNC, Reverse Socks5 Proxy, Password Recovery (Browser/Steam/Discord), and a native C++ stub size of only 15kb.",
+                    price: "FREE",
+                    version: "v5.6",
+                    detected: "0/26 Scanners",
+                    link: "https://www.mediafire.com/file/jjxb66y08hru42y/XWorm_V5.6.rar/file",
+                    image: "https://i.imgur.com/1KZw7xT.png" // REPLACE THIS WITH REAL IMG LINK
+                },
+                {
+                    id: "p2",
+                    category: "Free",
+                    name: "Ghost Builder",
+                    shortDesc: "Makes You'r Payload Run Slienty And Bypassed.",
+                    fullDesc: "A Crypter For Payload Uac Bypass, Startup, Anti Kill, Stop Defender When Run, BSOD In Kill,etc",
+                    price: "FREE",
+                    version: "v1.0",
+                    detected: "FUD (Runtime)",
+                    link: "https://www.mediafire.com/file/4w07nrtg1r956yw/Ghost.rar/file",
+                    image: "https://i.imgur.com/mUV5vY0.png" // Empty string shows placeholder
+                },
+                {
+                    id: "p3",
+                    category: "exploit",
+                    name: "HellRootKit",
+                    shortDesc: "Polymorphic loader for bypassing Windows Defender/SmartScreen.",
+                    fullDesc: "Ensure your payload lands. HellRootKit uses syscalls to bypass AV hooks and employs heavy obfuscation to evade static analysis.",
+                    price: "$25",
+                    version: "v1.0",
+                    detected: "Clean",
+                    link: "https://discord.gg/9SsVTGkY7V",
+                    image: "https://i.imgur.com/VY2hXf5.png"
+                },
+                {
+                    id: "p4",
+                    category: "free",
+                    name: "Nuker Servers",
+                    shortDesc: "Basic Nuker Servers Tool",
+                    fullDesc: "A simple python-based Nuker For Discord Delete Channel Etc, Controling By Bot Token!",
+                    price: "FREE",
+                    version: "v0.9",
+                    detected: "N/A",
+                    link: "https://www.mediafire.com/file/x9ya8lghbatyxlg/Nuke_Servers.rar/file",
+                    image: "https://i.imgur.com/LPomglQ.png"
+                },
+                {
+                    id: "p5",
+                    category: "exploit",
+                    name: "Venom Crypter",
+                    shortDesc: "Crypter For Python Code Open Source, C# Open Source!",
+                    fullDesc: "The ultimate Crypter For Python Code Open Source C# Open Source Anti VM, Anti Debug Nagtive C Compilation, Etc",
+                    price: "$40",
+                    version: "v1.0",
+                    detected: "FUD",
+                    link: "https://discord.gg/9SsVTGkY7V",
+                    image: "https://i.imgur.com/K0GA1tg.png"
+                }
+            ]
+        };
+
+        /**********************************************************
+         *  CORE ENGINE (Logic)
+         **********************************************************/
+        const app = {
+            currentFilter: 'all',
+            
+            init: function() {
+                document.documentElement.style.setProperty('--accent', CONFIG.branding.accentColor);
+                document.getElementById('nav-brand').innerText = CONFIG.branding.name;
+                document.getElementById('hero-head').innerText = CONFIG.branding.heroTitle;
+                document.getElementById('hero-sub').innerText = CONFIG.branding.heroSubtitle;
+                
+                this.render(CONFIG.products);
+            },
+
+            render: function(list) {
+                const grid = document.getElementById('product-grid');
+                grid.innerHTML = '';
+
+                list.forEach(p => {
+                    // Check if image exists, otherwise show placeholder text
+                    const imgContent = p.image 
+                        ? `<img src="${p.image}" style="width:100%; height:100%; object-fit:cover; opacity:0.9;">`
+                        : `[ ${p.category.toUpperCase()} MODULE ]`;
+
+                    const html = `
+                        <div class="card">
+                            <div class="card-inner">
+                                <div class="card-header">
+                                    <span>ID: ${p.id}</span>
+                                    <span><span class="status-dot online"></span>ACTIVE</span>
+                                </div>
+                                
+                                <div class="preview-box" style="${p.image ? 'padding:0; border:1px solid #333;' : ''}">
+                                    ${imgContent}
+                                </div>
+                                
+                                <h2>${p.name}</h2>
+                                <p>${p.shortDesc}</p>
+                                
+                                <div class="card-footer">
+                                    <span class="price" style="color:${p.price === 'FREE' ? '#0f0' : 'var(--accent)'}">${p.price}</span>
+                                    <div>
+                                        <button class="btn-details" onclick="app.showProduct('${p.id}')">SPECS</button>
+                                        <a href="${p.link}" class="btn-buy" style="margin-left:10px;">${p.price === 'FREE' ? 'GET' : 'BUY'}</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    grid.innerHTML += html;
+                });
+            },
+
+            setFilter: function(cat) {
+                this.currentFilter = cat;
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('active');
+                    if(b.innerText.toLowerCase().includes(cat) || (cat==='all' && b.innerText.includes('ALL'))) b.classList.add('active');
+                });
+
+                if(cat === 'all') {
+                    this.render(CONFIG.products);
+                } else {
+                    const filtered = CONFIG.products.filter(p => p.category === cat);
+                    this.render(filtered);
+                }
+            },
+
+            search: function(query) {
+                const q = query.toLowerCase();
+                const filtered = CONFIG.products.filter(p => 
+                    p.name.toLowerCase().includes(q) || 
+                    p.shortDesc.toLowerCase().includes(q)
+                );
+                this.render(filtered);
+            },
+
+            showProduct: function(id) {
+                const p = CONFIG.products.find(x => x.id === id);
+                if(!p) return;
+
+                const modalImg = p.image ? `<img src="${p.image}" style="width:100%; border:1px solid var(--accent); margin-bottom:15px;">` : '';
+
+                const content = `
+                    <div style="display:flex; flex-direction:column;">
+                        ${modalImg}
+                        <p style="color:#aaa; line-height:1.6;">${p.fullDesc}</p>
+                        
+                        <div class="spec-grid">
+                            <div class="spec-item">
+                                <span class="spec-label">VERSION</span>
+                                <span class="spec-val">${p.version}</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">DETECTION RATE</span>
+                                <span class="spec-val" style="color:${p.detected.includes('0') || p.detected.includes('Clean') ? '#0f0' : '#f00'}">${p.detected}</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">LICENSE</span>
+                                <span class="spec-val">Lifetime</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-label">SUPPORT</span>
+                                <span class="spec-val">24/7 Priority</span>
+                            </div>
+                        </div>
+
+                        <a href="${p.link}" class="btn-buy" style="width:100%; text-align:center; padding:15px;">INITIATE TRANSACTION [ ${p.price} ]</a>
+                    </div>
+                `;
+                
+                document.getElementById('m-title').innerText = p.name;
+                document.getElementById('m-body').innerHTML = content;
+                document.getElementById('modal-overlay').style.display = 'flex';
+            },
+
+            openModal: function(type) {
+                const title = document.getElementById('m-title');
+                const body = document.getElementById('m-body');
+                
+                if(type === 'about') {
+                    title.innerText = "SYSTEM MANIFESTO";
+                    body.innerHTML = CONFIG.aboutHtml;
+                } else if(type === 'contact') {
+                    title.innerText = "SECURE COMMS";
+                    body.innerHTML = CONFIG.contactHtml;
+                }
+                
+                document.getElementById('modal-overlay').style.display = 'flex';
+            },
+
+            closeModal: function() {
+                document.getElementById('modal-overlay').style.display = 'none';
+            }
+        };
+
+        // Boot
+        window.onload = () => app.init();
+
+    </script>
+
+</body>
+</html>
